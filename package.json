@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@arcjet/inspect": "^1.1.0",
+    "@arcjet/next": "^1.1.0",
     "@clerk/nextjs": "^6.37.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

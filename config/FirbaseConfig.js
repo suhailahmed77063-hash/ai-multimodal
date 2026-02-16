@@ -1,22 +1,17 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import {getFirestore} from 'firebase/firestore'
+import { getFirestore } from "firebase/firestore";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "ai-multimodal-78569.firebaseapp.com",
-  projectId: "ai-multimodal-78569",
-  storageBucket: "ai-multimodal-78569.firebasestorage.app",
-  messagingSenderId: "846920948146",
-  appId: "1:846920948146:web:1360c97061c6bd0cc52cab",
-  measurementId: "G-0KZ4HTS9XV"
+  apiKey:process.env.NEXT_PUBLIC_FIREBASE_API_KEY ,
+  authDomain: "aimodel-1adbb.firebaseapp.com",
+  projectId: "aimodel-1adbb",
+  storageBucket: "aimodel-1adbb.firebasestorage.app",
+  messagingSenderId: "296868211415",
+  appId: "1:296868211415:web:81c1fb0ad1d589a8a7de92",
+  measurementId: "G-TD4MSKETR8"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db=getFirestore(app,'default')
+export const db = getFirestore(app);

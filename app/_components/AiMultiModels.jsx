@@ -1,21 +1,29 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import AiModelList from './../../shared/AiModelList'
 import Image from 'next/image'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from '@/components/ui/switch'
-import { Lock, MessageSquare } from 'lucide-react'
+import { Lock, LockIcon, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AiSelectedModelContext } from '@/context/AiSelectedModelContext'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '@/config/FirbaseConfig'
+import { useUser } from '@clerk/nextjs'
 
 function AiMultiModels() {
+   const {user}=useUser();
   const [aiModelList, setAiModelList] = useState(AiModelList)
+  const {aiSelectedModels,setAiSelectedModels}=useContext(AiSelectedModelContext)
 
   const onToggleChange = (modelName, value) => {
     setAiModelList((prev) =>
@@ -24,8 +32,24 @@ function AiMultiModels() {
       )
     )
   }
+ const onSelectValue= async(parentModel,value)=> {
+  setAiSelectedModels(prev=>({
+    ...prev,
+    [parentModel] : {
+      modelId:value
+    }
+  }))
 
-  return (
+  // update to firebase db
+  const docRef=doc(db,'users',user?.primaryEmailAddress?.emailAddress);
+  await updateDoc(docRef,{
+    selectedModelPref:aiSelectedModels
+  })
+ }
+
+
+
+ return (
     <div className='flex flex-1 h-[75vh] border-b'>
       {aiModelList.map((model) => (
         <div
@@ -48,18 +72,37 @@ function AiMultiModels() {
                 />
 
                 {model.enable && (
-                  <Select>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={model.subModel[0]?.name} />
-                    </SelectTrigger>
+                 <Select defaultValue={aiSelectedModels[model.model].modelId} onValueChange={(value)=>onSelectValue(model.model,value)}
+                 disabled={model.premium}>
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={aiSelectedModels[model.model].modelId} />
+                  </SelectTrigger>
                     <SelectContent>
-                      {model.subModel.map((subModel, i) => (
-                        <SelectItem key={i} value={subModel.name}>
-                          {subModel.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <SelectGroup className='px-3'>
+                 <SelectLabel className='text-sm text-gray-400'>Free</SelectLabel>
+                     {model.subModel.map(
+                        (subModel, i) =>
+                       subModel.premium == false && (
+                     <SelectItem key={i} value={subModel.id}>
+                   {subModel.name}
+            </SelectItem>
+           )
+          )}
+         </SelectGroup>
+         <SelectGroup className='px-3'>
+                 <SelectLabel className='text-sm text-gray-400'>Premium</SelectLabel>
+                     {model.subModel.map(
+                        (subModel, i) =>
+                       subModel.premium == true && (
+                     <SelectItem key={i} value={subModel.name} disabled={subModel.premium}>
+                   {subModel.name} {subModel.premium && <LockIcon className='h-4 w-4'/>}
+            </SelectItem>
+           )
+          )}
+         </SelectGroup>
+             </SelectContent>
+            </Select>
+
                 )}
               </div>
 
