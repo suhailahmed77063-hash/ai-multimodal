@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  image         String?
+  credits       Int      @default(100)
+  plan          String   @default("Free")
+  remainingMsg  Int      @default(5)
+  selectedModelPref Json?
+  paymentId     String?
+  orderId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payments      Payment[]
+  settings      UserSettings?
+  messages      ChatMessage[]
+  subscriptions Subscription[]
+
+  @@map("users")
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  razorpayOrderId String
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amount          Float
+  currency        String  @default("INR")
+  planName        String
+  status          String  @default("pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme     String   @default("system")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model       String
+  modelId     String
+  role        String   // "user" or "assistant"
+  content     String
+  tokensUsed  Int?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, model])
+  @@map("chat_messages")
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planName        String
+  status          String   @default("active") // active, cancelled, expired
+  amount          Float
+  currency        String   @default("INR")
+  startDate       DateTime @default(now())
+  endDate         DateTime?
+  razorpaySubscriptionId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+model PricingPlan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  price       Float
+  currency    String   @default("INR")
+  credits     Int
+  messages    Int
+  features    Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("pricing_plans")
+}

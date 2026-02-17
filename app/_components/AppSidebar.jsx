@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -14,11 +15,17 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import UsageCreditProgress from "./UsageCreditProgress";
+import PaymentModal from "./PaymentModal";
+import { useContext } from "react";
+import { UserDetailContext } from "@/context/UserDetailContext";
 
 function AppSidebar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const {user}=useUser();
+  const { userDetail } = useContext(UserDetailContext);
+  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -95,17 +102,27 @@ function AppSidebar() {
           :
           <div>
             <UsageCreditProgress/>
-            <Button className={'w-full mb-3'}>
+            <Button 
+              className={'w-full mb-3'}
+              onClick={() => setShowPaymentModal(true)}
+            >
               <Zap/>Upgrade Plan
               </Button>
-          <Button className="flex w-full" variant={'ghost'}>
-            <User2/> 
-            <h2>Settings</h2>
-          </Button>
+          <Link href="/profile">
+            <Button className="flex w-full" variant={'ghost'}>
+              <User2/> 
+              <h2>Profile</h2>
+            </Button>
+          </Link>
           </div>
          }
         </div>
       </SidebarFooter>
+      
+      <PaymentModal 
+        open={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+      />
     </Sidebar>
   );
 }
