@@ -6,7 +6,7 @@ export async function GET(req) {
 
    const decision = await aj.protect(req, {
      userId,
-     requested: 5
+     requested: 1  // ✅ ALWAYS 1 for normal request
    });
 
    console.log("Arcjet decision", decision);

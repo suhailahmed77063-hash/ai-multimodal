@@ -6,56 +6,44 @@ import AppSidebar from "./_components/AppSidebar";
 import AppHeader from "./_components/AppHeader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useUser } from "@clerk/nextjs";
-import { db } from "@/config/FirbaseConfig";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 import {AiSelectedModelContext} from "@/context/AiSelectedModelContext";
 import { DefaultModel } from "@/shared/AiModelsShared";
 import {UserDetailContext} from "@/context/UserDetailContext";
+import axios from "axios";
 
 function Provider({ children, ...props }) {
 
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [aiSelectedModels,setAiSelectedModels]=useState(DefaultModel)
   const [userDetail,setUserDetail]=useState();
+  const [messages,setMessages]=useState([])
 
   const CreateNewUser = async () => {
     if (!user) return;
 
-    const userRef = doc(
-      db,
-      "users",
-      user?.primaryEmailAddress?.emailAddress
-    );
-
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      console.log('Existing User');
-      const userInfo=userSnap.data();
-      setAiSelectedModels(userInfo?.selectedModelPref);
-      setUserDetail(userInfo);
-      return;
-    } else {
-      const userData = {
-        name: user?.fullName,
+    try {
+      const response = await axios.post('/api/user/create', {
         email: user?.primaryEmailAddress?.emailAddress,
-        createdAt: new Date(),
-        remaingMsg: 5,
-        plan: 'Free',
-        credits: 1000
-      };
+        name: user?.fullName,
+      });
 
-      await setDoc(userRef, userData);
-      console.log('New user data saved');
+      const userData = response.data;
+      
+      if (userData?.selectedModelPref) {
+        setAiSelectedModels(userData.selectedModelPref);
+      }
+      
       setUserDetail(userData);
+    } catch (error) {
+      console.error('Error creating/fetching user:', error);
     }
   };
 
   useEffect(() => {
-    if (user) {
+    if (isLoaded && user) {
       CreateNewUser();
     }
-  }, [user]);
+  }, [user, isLoaded]);
 
   return (
     <NextThemesProvider
@@ -64,7 +52,7 @@ function Provider({ children, ...props }) {
       enableSystem
       disableTransitionOnChange>
         <UserDetailContext.Provider value={{userDetail,setUserDetail}}>
-      <AiSelectedModelContext.Provider value={{aiSelectedModels,setAiSelectedModels}}>
+      <AiSelectedModelContext.Provider value={{aiSelectedModels,setAiSelectedModels,messages,setMessages}}>
       <SidebarProvider>
         <AppSidebar />
         <div className="w-full">
